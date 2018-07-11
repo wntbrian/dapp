@@ -1,0 +1,231 @@
+dimg: ~
+# dimg: DIMG_NAME
+from: ubuntu:16.04
+# fromDimg: ANOTHER_DIMG_NAME
+git:
+  - ## Local git
+    add: /
+    # add: ABSOLUTE_PATH_FROM_REPO_ROOT
+    to: /app
+    # to: ABSOLUTE_PATH_IN_IMAGE
+    # owner: OWNER
+    # group: GROUP
+    # as: OPTIONAL_NAME_FOR_HELM_VALUES
+
+    ## RELATIVE_PATH_OR_GLOB is a path relative to `add` directive path
+    # includePaths:
+    #   - RELATIVE_PATH_OR_GLOB
+    excludePaths:
+      - /hello
+    # excludePaths:
+    #   - RELATIVE_PATH_OR_GLOB
+    # stageDependencies:
+    #   install:
+    #     - RELATIVE_PATH_OR_GLOB
+    #   beforeSetup:
+    #     - RELATIVE_PATH_OR_GLOB
+    #   setup:
+    #     - RELATIVE_PATH_OR_GLOB
+
+  - ## Add remote git within the same gitlab, accessing by https+token
+    url: https://gitlab-ci-token:{{ env "CI_JOB_TOKEN" }}@gitlab.myhost.com/sys/project.git
+    # branch: BRANCH
+    # commit: COMMIT
+    add: /
+    to: /project
+    excludePaths:
+      - docs
+    stageDependencies:
+      install:
+        - "**/*.go"
+
+  - ## Add remote git artifact, accessing by ssh
+    ## All keys
+    url: git@gitlab.myhost.com:hello/wrld.git
+    add: /
+    # add to the path excluded in local git
+    to: /app/hello
+
+shell:
+  beforeInstall:
+    - CMD
+  install:
+    - CMD
+  beforeSetup:
+    - CMD
+  setup:
+    - CMD
+  cacheVersion: VERSION
+  beforeInstallCacheVersion: VERSION
+  installCacheVersion: VERSION
+  beforeSetupCacheVersion: VERSION
+  setupCacheVersion: VERSION
+
+ansible:
+  beforeInstall:
+    - TASK
+  install:
+    - TASK
+  beforeSetup:
+    - TASK
+  setup:
+    - TASK
+  cacheVersion: VERSION
+  beforeInstallCacheVersion: VERSION
+  installCacheVersion: VERSION
+  beforeSetupCacheVersion: VERSION
+  setupCacheVersion: VERSION
+
+import:
+  - artifact: promicher builder
+    # artifact: ARTIFACT_NAME
+    after: setup
+    # before: install || setup
+    # after: install || setup
+    add: /go/bin/promicher
+    # add: ABSOLUTE_PATH_IN_ARTIFACT_IMAGE
+    to: /usr/local/bin/promicher
+    # to: ABSOLUTE_PATH_IN_CURRENT_IMAGE
+    # owner: OWNER
+    # group: GROUP
+    # includePaths:
+    #   - RELATIVE_PATH_OR_GLOB
+    # excludePaths:
+    #   - RELATIVE_PATH_OR_GLOB
+
+---
+artifact: promicher builder
+from: golang:latest
+git:
+- url: https://github.com/flant/promicher.git
+  to: /go/src/github.com/flant/promicher
+  stageDependencies:
+    install:
+    - "**/*.go"
+ansible:
+  install:
+    - name: Get dependencies
+      shell: ./go-get.sh
+      args:
+        chdir: /go/src/fox.flant.com/sys/gogomonia
+  buildArtifact:
+    - name: Build binary
+      shell: CGO_ENABLED=0 GOOS=linux ./go-install.sh
+      args:
+        chdir: /go/src/fox.flant.com/sys/gogomonia
+
+
+
+
+mount:
+- from: build_dir
+  to: <absolute_path>
+- from: tmp_dir
+  to: <absolute_path>
+- fromPath: <absolute_path>
+  to: <absolute_path>
+docker:
+  VOLUME:
+  - <volume>
+  EXPOSE:
+  - <expose>
+  ENV:
+    <env_name>: <env_value>
+  LABEL:
+    <label_name>: <label_value>
+  ENTRYPOINT:
+  - <entrypoint>
+  CMD:
+  - CMD
+  ONBUILD:
+  - <onbuild>
+  WORKDIR: <workdir>
+  USER: <user>
+asLayers: <false || true>
+---
+artifact: <artifact_name>
+from: <image>
+git:
+# local git
+- as: <custom_name>
+  add: <absolute_path>
+  to: <absolute_path>
+  owner: <owner>
+  group: <group>
+  includePaths:
+  - <relative_path or glob>
+  excludePaths:
+  - <relative_path or glob>
+  stageDependencies:
+    install:
+    - <relative_path or glob>
+    beforeSetup:
+    - <relative_path or glob>
+    setup:
+    - <relative_path or glob>
+    buildArtifact:
+    - <relative_path or glob>
+# remote git
+- url: <git_repo_url>
+  branch: <branch_name>
+  commit: <commit>
+  as: <custom_name>
+  add: <absolute_path>
+  to: <absolute_path>
+  owner: <owner>
+  group: <group>
+  includePaths:
+  - <relative_path or glob>
+  excludePaths:
+  - <relative_path or glob>
+  stageDependencies:
+    install:
+    - <relative_path or glob>
+    beforeSetup:
+    - <relative_path or glob>
+    setup:
+    - <relative_path or glob>
+    buildArtifact:
+    - <relative_path or glob>
+shell:
+  beforeInstall:
+  - CMD
+  install:
+  - CMD
+  beforeSetup:
+  - CMD
+  setup:
+  - CMD
+  buildArtifact:
+  - CMD
+  cacheVersion: VERSION
+  beforeInstallCacheVersion: VERSION
+  installCacheVersion: VERSION
+  beforeSetupCacheVersion: VERSION
+  setupCacheVersion: VERSION
+  buildArtifactCacheVersion: VERSION
+ansible:
+  beforeInstall:
+  - TASK
+  install:
+  - TASK
+  beforeSetup:
+  - TASK
+  setup:
+  - TASK
+  buildArtifact:
+  - TASK
+  cacheVersion: VERSION
+  beforeInstallCacheVersion: VERSION
+  installCacheVersion: VERSION
+  beforeSetupCacheVersion: VERSION
+  setupCacheVersion: VERSION
+  buildArtifactCacheVersion: VERSION
+mount:
+- from: build_dir
+  to: <absolute_path>
+- from: tmp_dir
+  to: <absolute_path>
+- fromPath: <absolute_path>
+  to: <absolute_path>
+asLayers: <false || true>
