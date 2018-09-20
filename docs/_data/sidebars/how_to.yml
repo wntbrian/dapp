@@ -13,5 +13,5 @@ entries:
     - title: Deploy into kubernetes
       url: /deploy_into_kubernetes.html
 
-    - title: Gitlab CI integration
+    - title: GitLab CI integration
       url: /gitlab_ci_integration.html
