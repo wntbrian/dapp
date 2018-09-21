@@ -1,7 +1,7 @@
 ---
-title: GitLab CI integration
+title: Gitlab CI/CD integration
 sidebar: how_to
-permalink: gitlab_ci_cd_integration.html
+permalink: how_to/gitlab_ci_cd_integration.html
 ---
 
 ## Objectives
