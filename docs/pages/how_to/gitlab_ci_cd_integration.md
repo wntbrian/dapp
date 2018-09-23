@@ -10,42 +10,45 @@ Setup CI/CD process using GitLab CI and dapp.
 
 ## Before you begin
 
-This HowTo assumes you have:
-* Kubernetes cluster and the kubectl CLI tool configured to communicate with cluster
-* Server with GitLab above 10.x version (or account on [SaaS GitLab](https://gitlab.com/))
-* Docker registry (GitLab embedded or somthere else)
-* Host for build node (optional)
-* An application you can successfully build and deploy with dapp
+To begin, you'll need the following:
+* Kubernetes cluster and the kubectl CLI tool configured to communicate with the cluster;
+* Server with GitLab above 10.x version (or account on [SaaS GitLab](https://gitlab.com/));
+* Docker registry (GitLab embedded or somewhere else);
+* Host for build node (optional);
+* An application you can successfully build and deploy with dapp;
 
 ## Infrastructure
 
 - Kubernetes cluster
 - GitLab with docker registry enabled
 - Build node
-- Deploy node
+- Deployment node
 
-We don't recommend to run dapp in docker as it can give an unexpected result. Also, dapp use `~/.dapp/` folder, and dapp assumes this folder is preserved for all pipelines. That is why we don't recommend you to use for build e.g. cloud environments which don't preserve gitlab-runner files between runs for any pipelines.
+We don't recommend to run dapp in docker as it can give an unexpected result.
 
-Build, deploy and cleanup is a steps you need to setup. For all steps you need to use gitlab-runner, which will run `dapp`.
+In order to set up the CI/CD process, you need to describe build, deploy and cleanup stages. For all of these stages, a GitLab runner with shell executor is needed to run `dapp`.
 
-We recommend you to use in production separate hosts for build (build node) and for deploy (deploy node). The reasons are:
-* for deploy you need an access to cluster through kubectl, and simply you can use master node
-* building needs more resources than for deploying, and master node typically has no such resources
-* build procces can affect on the master node, and can affect on the whole cluster
+Dapp use `~/.dapp/` folder to store build cache and other files. Dapp assumes this folder is preserved for all pipelines. That is why for build processes we don't recommend you to use environments which are don't preserve a GitLab runner's state (files between runs), e.g. some cloud environments.
 
-You need to setup gitlab runners with only two tags - build and deploy respectively for build stage and deploy stage. Cleanup will use both runners and don't need separate runners or nodes.
+We recommend you to use separate hosts for building (build node) and for deploying (deployment node). The reasons are:
+* the deployment process needs access to the cluster through kubectl, and simply you can use a master node, but build process needs more resources than deployment process, and the master node typically has no such resources;
+* the build process can affect on the master node and can affect on the whole cluster.
 
-Build node needs an access to git repository of the application and to the docker registry, while deploy node additionly needs an access to the kubernetes cluster.
+Also, it is not recommended to
+
+You need to set up gitlab runners with only two tags - `build` and `deploy` respectively for build stage and for deployment stage. The cleanup stage will use both runners and don't need separate runners or nodes.
+
+Build node needs access to the application git repository and to the docker registry, while the deployment node additionally needs access to the kubernetes cluster.
 
 ### Base setup
 
-On build and deploy nodes you need to install and setup gitlab-runners. Follow these steps on both nodes:
+On the build and the deployment nodes you need to install and set up GitLab runners. Follow these steps on both nodes:
 
 1. Create GitLab project and push code into it.
-2. Get registration token for runners. In your GitLab project open `Settings` -> `CI/CD`, expand `Runners` and find toke in section `Setup a specific Runner manually`
+1. Get registration token for the runner. In your GitLab project open `Settings` -> `CI/CD`, expand `Runners` and find the token in the section `Setup a specific Runner manually`.
 1. [Install gitlab-runners](https://docs.gitlab.com/runner/install/linux-manually.html):
-    - `deploy runner` - on the master kubernetes node
-    - `build runner` - on the separate node or on the master kubernetes node (not recommend for production)
+    - `deployment runner` - on the master kubernetes node
+    - `build runner` - on the separate host (not on any node of the kubernetes cluster) or on the master kubernetes node (not recommended for production)
 1. Register gitlab-runner.
 
     [Use these steps](https://docs.gitlab.com/runner/register/index.html) to register runners, but:
@@ -92,7 +95,7 @@ sudo chown -R gitlab-runner:gitlab-runner /home/gitlab-runner/.kube
 
 ## Pipeline
 
-When you have working build and deploy runners, you are ready to setup GitLab pipeline.
+When you have working build and deployment runners, you are ready to set up GitLab pipeline.
 
 When GitLab starts job it sets list of [environments](https://docs.gitlab.com/ee/ci/variables/README.html) and we will use some of them.
 
@@ -236,7 +239,7 @@ We've defined two jobs:
 1. Review.
     In this job we set name of the environment based on CI_COMMIT_REF_SLUG GitLab variable. For every branch gitlab will create uniq enviroment.
 
-    The url parameter of the job you can use in you helm templates to setup e.g. ingress.
+    The url parameter of the job you can use in you helm templates to set up e.g. ingress.
 
     Name of the kubernetes namespace will be equal CI_NAMESPACE (defined in dapp parameters in `base_deploy` template).    
 2. Stop review.
